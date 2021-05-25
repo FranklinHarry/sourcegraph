@@ -7,6 +7,7 @@ import React from 'react'
 import { HoverAlert } from 'sourcegraph'
 
 import { renderMarkdown } from '../../util/markdown'
+import { useRedesignToggle } from '../../util/useRedesignToggle'
 import { GetAlertClassName } from '../HoverOverlay.types'
 
 export interface HoverOverlayAlertsProps {
@@ -35,6 +36,9 @@ function hoverAlertIconComponent(
 export const HoverOverlayAlerts: React.FunctionComponent<HoverOverlayAlertsProps> = props => {
     const { hoverAlerts, iconClassName, onAlertDismissed, getAlertClassName = () => undefined } = props
 
+    const [isRedesignEnabled] = useRedesignToggle()
+    const DismissLabelWrapper = isRedesignEnabled ? 'small' : React.Fragment
+
     const getHandleAlertDismissed = (alertType: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault()
 
@@ -46,8 +50,14 @@ export const HoverOverlayAlerts: React.FunctionComponent<HoverOverlayAlertsProps
     return (
         <div className="hover-overlay__alerts">
             {hoverAlerts.map(({ summary, iconKind, type }, index) => (
-                <div key={index} className={classNames('hover-overlay__alert', getAlertClassName('info'))}>
-                    {hoverAlertIconComponent(iconKind, iconClassName)}
+                <div
+                    key={index}
+                    className={classNames(
+                        isRedesignEnabled ? getAlertClassName(iconKind || 'info') : getAlertClassName('info'),
+                        isRedesignEnabled ? 'hover-overlay__alert-redesign' : 'hover-overlay__alert'
+                    )}
+                >
+                    {!isRedesignEnabled && hoverAlertIconComponent(iconKind, iconClassName)}
                     {summary.kind === 'plaintext' ? (
                         <span className="hover-overlay__content">{summary.value}</span>
                     ) : (
@@ -60,11 +70,11 @@ export const HoverOverlayAlerts: React.FunctionComponent<HoverOverlayAlertsProps
                     {/* Show dismiss button when an alert has a dismissal type. */}
                     {/* If no type is provided, the alert is not dismissible. */}
                     {type && (
-                        <div className="hover-overlay__alert-actions">
+                        <div className="hover-overlay__alert-dismiss">
                             {/* Ideally this should a <button> but we can't guarantee we have the .btn-link class here. */}
                             {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                             <a href="" onClick={getHandleAlertDismissed(type)} role="button">
-                                <small>Dismiss</small>
+                                <DismissLabelWrapper>Dismiss</DismissLabelWrapper>
                             </a>
                         </div>
                     )}
